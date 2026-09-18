@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>LTS QR Maker</title>
+<style>
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f5f7;color:#111}
+  .wrap{max-width:760px;margin:28px auto;padding:0 16px}
+  .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
+  h1{margin:0 0 6px;font-size:25px}
+  .sub{color:#666;margin-bottom:18px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:620px){.grid{grid-template-columns:1fr}}
+  label{display:block;font-size:13px;font-weight:700;margin:0 0 6px}
+  select,input,button{width:100%;font:inherit;border-radius:9px;padding:11px 12px;border:1px solid #c9ced6;background:#fff}
+  button{cursor:pointer;font-weight:700}
+  .primary{background:#1769aa;color:#fff;border-color:#1769aa}
+  .secondary{background:#eef5fb;color:#1769aa;border-color:#b8d0e4}
+  .buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+  @media(max-width:520px){.buttons{grid-template-columns:1fr}}
+  .preview{margin-top:18px;background:#fafafa;border:1px solid #ddd;border-radius:12px;padding:16px;text-align:center;display:none}
+  .preview canvas{max-width:360px;width:100%;height:auto;background:#fff;border:1px solid #eee}
+  .status{margin-top:12px;padding:10px 12px;border-radius:8px;background:#eef5fb;color:#174a75;display:none}
+  .note{margin-top:16px;font-size:13px;color:#555;line-height:1.45}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="card">
+    <h1>LTS QR Maker</h1>
+    <div class="sub">Create Driver, Car, or Scanner QR PNGs in the same print style.</div>
+
+    <div class="grid">
+      <div>
+        <label>Type</label>
+        <select id="type">
+          <option value="D">Driver</option>
+          <option value="C">Car</option>
+          <option value="S">Scanner</option>
+        </select>
+      </div>
+      <div>
+        <label id="valueLabel">Driver ID</label>
+        <input id="value" placeholder="2022" autocomplete="off">
+      </div>
+    </div>
+
+    <div class="buttons">
+      <button class="primary" id="generateBtn">Generate Preview</button>
+      <button class="secondary" id="downloadBtn" disabled>Download PNG</button>
+    </div>
+
+    <div id="preview" class="preview">
+      <canvas id="canvas" width="1200" height="1400"></canvas>
+      <div id="status" class="status"></div>
+    </div>
+
+    <div class="note">
+      Encoded values: <b>D:ID</b>, <b>C:PLATE</b>, <b>S:SCANNER-ID</b>.
+      The visible text below the QR shows only the ID / plate / scanner number.
+    </div>
+  </div>
+</div>
+
+<script>
+const typeEl = document.getElementById('type');
+const valueEl = document.getElementById('value');
+const valueLabel = document.getElementById('valueLabel');
+const generateBtn = document.getElementById('generateBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const preview = document.getElementById('preview');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const statusEl = document.getElementById('status');
+
+let currentFilename = '';
+
+function updateTypeUI(){
+  const t = typeEl.value;
+  if(t === 'D'){
+    valueLabel.textContent = 'Driver ID';
+    valueEl.placeholder = '2022';
+  } else if(t === 'C'){
+    valueLabel.textContent = 'Car plate';
+    valueEl.placeholder = 'BL-115FT';
+  } else {
+    valueLabel.textContent = 'Scanner ID';
+    valueEl.placeholder = 'LTS-VIE-001';
+  }
+}
+typeEl.addEventListener('change', updateTypeUI);
+
+function normalizeValue(type, value){
+  let v = String(value || '').trim();
+  if(!v) return '';
+  const prefix = type + ':';
+  if(v.toUpperCase().startsWith(prefix)) v = v.substring(2).trim();
+  if(type === 'C' || type === 'S') v = v.toUpperCase();
+  return v;
+}
+
+function safeFilename(value){
+  return value.replace(/[^A-Za-z0-9._-]+/g,'_') + '.png';
+}
+
+function qrSourceUrl(type, value){
+  return 'https://bwipjs-api.metafloor.com/?bcid=qrcode'
+    + '&text=' + encodeURIComponent(type + ':' + value)
+    + '&eclevel=M'
+    + '&scale=12'
+    + '&paddingwidth=12'
+    + '&paddingheight=12'
+    + '&format=png';
+}
+
+async function makeImage(){
+  const type = typeEl.value;
+  const value = normalizeValue(type, valueEl.value);
+  if(!value){
+    alert('Enter an ID / plate / scanner number.');
+    valueEl.focus();
+    return;
+  }
+
+  valueEl.value = value;
+  currentFilename = safeFilename(value);
+  preview.style.display = 'block';
+  statusEl.style.display = 'block';
+  statusEl.textContent = 'Generating image…';
+
+  try{
+    const res = await fetch(qrSourceUrl(type, value));
+    if(!res.ok) throw new Error('HTTP ' + res.status);
+    const blob = await res.blob();
+    const bmp = await createImageBitmap(blob);
+
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, 1200, 1400);
+
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(bmp, 100, 80, 1000, 1000);
+
+    let fontSize = type === 'S' ? 72 : 82;
+    ctx.fillStyle = '#000';
+    ctx.font = '700 ' + fontSize + 'px Arial, Helvetica, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'top';
+    ctx.fillText(value, 600, 1120);
+
+    statusEl.textContent = 'Ready: ' + currentFilename;
+    downloadBtn.disabled = false;
+  } catch(err){
+    console.error(err);
+    statusEl.textContent = 'Could not generate the QR. Refresh and try again.';
+    downloadBtn.disabled = true;
+  }
+}
+
+generateBtn.addEventListener('click', makeImage);
+valueEl.addEventListener('keydown', e => {
+  if(e.key === 'Enter') makeImage();
+});
+
+downloadBtn.addEventListener('click', () => {
+  if(!currentFilename) return;
+  canvas.toBlob(blob => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = currentFilename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    statusEl.textContent = 'Downloaded: ' + currentFilename;
+  }, 'image/png');
+});
+
+updateTypeUI();
+</script>
+</body>
+</html>
