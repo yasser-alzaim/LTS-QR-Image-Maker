@@ -3,14 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>LTS QR Maker</title>
+<title>LTS QR Image Maker</title>
 <style>
   *{box-sizing:border-box}
   body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f5f7;color:#111}
   .wrap{max-width:760px;margin:28px auto;padding:0 16px}
   .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-  h1{margin:0 0 6px;font-size:25px}
-  .sub{color:#666;margin-bottom:18px}
+  h1{margin:0 0 18px;font-size:25px}
   .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   @media(max-width:620px){.grid{grid-template-columns:1fr}}
   label{display:block;font-size:13px;font-weight:700;margin:0 0 6px}
@@ -24,13 +23,14 @@
   .preview canvas{max-width:360px;width:100%;height:auto;background:#fff;border:1px solid #eee}
   .status{margin-top:12px;padding:10px 12px;border-radius:8px;background:#eef5fb;color:#174a75;display:none}
   .note{margin-top:16px;font-size:13px;color:#555;line-height:1.45}
+  #qrWork{position:absolute;left:-99999px;top:-99999px}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 <div class="wrap">
   <div class="card">
-    <h1>LTS QR Maker</h1>
-    <div class="sub">Create Driver, Car, or Scanner QR PNGs in the same print style.</div>
+    <h1>LTS QR Image Maker</h1>
 
     <div class="grid">
       <div>
@@ -59,10 +59,11 @@
 
     <div class="note">
       Encoded values: <b>D:ID</b>, <b>C:PLATE</b>, <b>S:SCANNER-ID</b>.
-      The visible text below the QR shows only the ID / plate / scanner number.
     </div>
   </div>
 </div>
+
+<div id="qrWork"></div>
 
 <script>
 const typeEl = document.getElementById('type');
@@ -74,6 +75,7 @@ const preview = document.getElementById('preview');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const statusEl = document.getElementById('status');
+const qrWork = document.getElementById('qrWork');
 
 let currentFilename = '';
 
@@ -105,45 +107,69 @@ function safeFilename(value){
   return value.replace(/[^A-Za-z0-9._-]+/g,'_') + '.png';
 }
 
-function qrSourceUrl(type, value){
-  return 'https://bwipjs-api.metafloor.com/?bcid=qrcode'
-    + '&text=' + encodeURIComponent(type + ':' + value)
-    + '&eclevel=M'
-    + '&scale=12'
-    + '&paddingwidth=12'
-    + '&paddingheight=12'
-    + '&format=png';
+function waitForQrCanvas(timeoutMs=3000){
+  return new Promise((resolve,reject)=>{
+    const start = Date.now();
+    const tick = ()=>{
+      const c = qrWork.querySelector('canvas');
+      const img = qrWork.querySelector('img');
+      if(c) return resolve(c);
+      if(img && img.complete) return resolve(img);
+      if(Date.now()-start > timeoutMs) return reject(new Error('QR generation timeout'));
+      setTimeout(tick,50);
+    };
+    tick();
+  });
 }
 
 async function makeImage(){
   const type = typeEl.value;
   const value = normalizeValue(type, valueEl.value);
+
   if(!value){
     alert('Enter an ID / plate / scanner number.');
     valueEl.focus();
     return;
   }
 
+  if(typeof QRCode === 'undefined'){
+    preview.style.display = 'block';
+    statusEl.style.display = 'block';
+    statusEl.textContent = 'QR library did not load. Refresh the page and try again.';
+    downloadBtn.disabled = true;
+    return;
+  }
+
   valueEl.value = value;
   currentFilename = safeFilename(value);
+
   preview.style.display = 'block';
   statusEl.style.display = 'block';
   statusEl.textContent = 'Generating image…';
+  downloadBtn.disabled = true;
+
+  qrWork.innerHTML = '';
+
+  new QRCode(qrWork, {
+    text: type + ':' + value,
+    width: 800,
+    height: 800,
+    colorDark: '#000000',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
 
   try{
-    const res = await fetch(qrSourceUrl(type, value));
-    if(!res.ok) throw new Error('HTTP ' + res.status);
-    const blob = await res.blob();
-    const bmp = await createImageBitmap(blob);
+    const qrSource = await waitForQrCanvas();
 
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, 1200, 1400);
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0,0,1200,1400);
 
     ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(bmp, 100, 80, 1000, 1000);
+    ctx.drawImage(qrSource, 100, 80, 1000, 1000);
 
     let fontSize = type === 'S' ? 72 : 82;
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = '#000000';
     ctx.font = '700 ' + fontSize + 'px Arial, Helvetica, sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'top';
@@ -151,9 +177,9 @@ async function makeImage(){
 
     statusEl.textContent = 'Ready: ' + currentFilename;
     downloadBtn.disabled = false;
-  } catch(err){
+  }catch(err){
     console.error(err);
-    statusEl.textContent = 'Could not generate the QR. Refresh and try again.';
+    statusEl.textContent = 'Could not generate the QR. Refresh the page and try again.';
     downloadBtn.disabled = true;
   }
 }
@@ -165,7 +191,9 @@ valueEl.addEventListener('keydown', e => {
 
 downloadBtn.addEventListener('click', () => {
   if(!currentFilename) return;
+
   canvas.toBlob(blob => {
+    if(!blob) return;
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
