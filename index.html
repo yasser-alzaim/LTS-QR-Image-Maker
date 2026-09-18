@@ -4,209 +4,937 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>LTS QR Image Maker</title>
+
 <style>
-  *{box-sizing:border-box}
-  body{margin:0;font-family:Arial,Helvetica,sans-serif;background:#f3f5f7;color:#111}
-  .wrap{max-width:760px;margin:28px auto;padding:0 16px}
-  .card{background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 18px rgba(0,0,0,.08)}
-  h1{margin:0 0 18px;font-size:25px}
-  .grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-  @media(max-width:620px){.grid{grid-template-columns:1fr}}
-  label{display:block;font-size:13px;font-weight:700;margin:0 0 6px}
-  select,input,button{width:100%;font:inherit;border-radius:9px;padding:11px 12px;border:1px solid #c9ced6;background:#fff}
-  button{cursor:pointer;font-weight:700}
-  .primary{background:#1769aa;color:#fff;border-color:#1769aa}
-  .secondary{background:#eef5fb;color:#1769aa;border-color:#b8d0e4}
-  .buttons{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
-  @media(max-width:520px){.buttons{grid-template-columns:1fr}}
-  .preview{margin-top:18px;background:#fafafa;border:1px solid #ddd;border-radius:12px;padding:16px;text-align:center;display:none}
-  .preview canvas{max-width:360px;width:100%;height:auto;background:#fff;border:1px solid #eee}
-  .status{margin-top:12px;padding:10px 12px;border-radius:8px;background:#eef5fb;color:#174a75;display:none}
-  .note{margin-top:16px;font-size:13px;color:#555;line-height:1.45}
-  #qrWork{position:absolute;left:-99999px;top:-99999px}
+  *{
+    box-sizing:border-box;
+  }
+
+  body{
+    margin:0;
+    font-family:Arial,Helvetica,sans-serif;
+    background:#f3f5f7;
+    color:#111;
+  }
+
+  .wrap{
+    max-width:760px;
+    margin:28px auto;
+    padding:0 16px;
+  }
+
+  .card{
+    background:#fff;
+    border-radius:16px;
+    padding:20px;
+    box-shadow:0 4px 18px rgba(0,0,0,.08);
+  }
+
+  h1{
+    margin:0 0 18px;
+    font-size:25px;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:12px;
+  }
+
+  @media(max-width:620px){
+    .grid{
+      grid-template-columns:1fr;
+    }
+  }
+
+  label{
+    display:block;
+    font-size:13px;
+    font-weight:700;
+    margin:0 0 6px;
+  }
+
+  select,
+  input,
+  button{
+    width:100%;
+    font:inherit;
+    border-radius:9px;
+    padding:11px 12px;
+    border:1px solid #c9ced6;
+    background:#fff;
+  }
+
+  button{
+    cursor:pointer;
+    font-weight:700;
+  }
+
+  .primary{
+    background:#1769aa;
+    color:#fff;
+    border-color:#1769aa;
+  }
+
+  .secondary{
+    background:#eef5fb;
+    color:#1769aa;
+    border-color:#b8d0e4;
+  }
+
+  .buttons{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:10px;
+    margin-top:14px;
+  }
+
+  @media(max-width:520px){
+    .buttons{
+      grid-template-columns:1fr;
+    }
+  }
+
+  .preview{
+    margin-top:18px;
+    background:#fafafa;
+    border:1px solid #ddd;
+    border-radius:12px;
+    padding:16px;
+    text-align:center;
+    display:none;
+  }
+
+  .preview canvas{
+    max-width:360px;
+    width:100%;
+    height:auto;
+    background:#fff;
+    border:1px solid #eee;
+  }
+
+  .status{
+    margin-top:12px;
+    padding:10px 12px;
+    border-radius:8px;
+    background:#eef5fb;
+    color:#174a75;
+    display:none;
+  }
+
+  .note{
+    margin-top:16px;
+    font-size:13px;
+    color:#555;
+    line-height:1.45;
+  }
+
+  #qrWork{
+    position:absolute;
+    left:-99999px;
+    top:-99999px;
+  }
 </style>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
 </head>
+
 <body>
+
 <div class="wrap">
+
   <div class="card">
+
     <h1>LTS QR Image Maker</h1>
 
     <div class="grid">
+
       <div>
         <label>Type</label>
+
         <select id="type">
           <option value="D">Driver</option>
           <option value="C">Car</option>
           <option value="S">Scanner</option>
         </select>
       </div>
+
       <div>
         <label id="valueLabel">Driver ID</label>
-        <input id="value" placeholder="2022" autocomplete="off">
+
+        <input
+          id="value"
+          placeholder="2022"
+          autocomplete="off"
+        >
       </div>
+
+      <div id="driverNameWrap">
+        <label>Driver Name</label>
+
+        <input
+          id="driverName"
+          placeholder="Agholor Blessing"
+          autocomplete="off"
+        >
+      </div>
+
     </div>
 
     <div class="buttons">
-      <button class="primary" id="generateBtn">Generate Preview</button>
-      <button class="secondary" id="downloadBtn" disabled>Download PNG</button>
+
+      <button
+        class="primary"
+        id="generateBtn"
+      >
+        Generate Preview
+      </button>
+
+      <button
+        class="secondary"
+        id="downloadBtn"
+        disabled
+      >
+        Download PNG
+      </button>
+
     </div>
 
-    <div id="preview" class="preview">
-      <canvas id="canvas" width="1200" height="1400"></canvas>
-      <div id="status" class="status"></div>
+    <div
+      id="preview"
+      class="preview"
+    >
+
+      <canvas
+        id="canvas"
+        width="1200"
+        height="1400"
+      ></canvas>
+
+      <div
+        id="status"
+        class="status"
+      ></div>
+
     </div>
 
     <div class="note">
-      Encoded values: <b>D:ID</b>, <b>C:PLATE</b>, <b>S:SCANNER-ID</b>.
+      Encoded values:
+      <b>D:ID</b>,
+      <b>C:PLATE</b>,
+      <b>S:SCANNER-ID</b>.
     </div>
+
   </div>
+
 </div>
 
 <div id="qrWork"></div>
 
 <script>
-const typeEl = document.getElementById('type');
-const valueEl = document.getElementById('value');
-const valueLabel = document.getElementById('valueLabel');
-const generateBtn = document.getElementById('generateBtn');
-const downloadBtn = document.getElementById('downloadBtn');
-const preview = document.getElementById('preview');
-const canvas = document.getElementById('canvas');
-const ctx = canvas.getContext('2d');
-const statusEl = document.getElementById('status');
-const qrWork = document.getElementById('qrWork');
+
+const typeEl =
+  document.getElementById('type');
+
+const valueEl =
+  document.getElementById('value');
+
+const valueLabel =
+  document.getElementById('valueLabel');
+
+const generateBtn =
+  document.getElementById('generateBtn');
+
+const downloadBtn =
+  document.getElementById('downloadBtn');
+
+const preview =
+  document.getElementById('preview');
+
+const canvas =
+  document.getElementById('canvas');
+
+const ctx =
+  canvas.getContext('2d');
+
+const statusEl =
+  document.getElementById('status');
+
+const qrWork =
+  document.getElementById('qrWork');
+
+const driverNameWrap =
+  document.getElementById('driverNameWrap');
+
+const driverNameEl =
+  document.getElementById('driverName');
+
 
 let currentFilename = '';
 
+
 function updateTypeUI(){
+
   const t = typeEl.value;
+
   if(t === 'D'){
-    valueLabel.textContent = 'Driver ID';
-    valueEl.placeholder = '2022';
-  } else if(t === 'C'){
-    valueLabel.textContent = 'Car plate';
-    valueEl.placeholder = 'BL-115FT';
-  } else {
-    valueLabel.textContent = 'Scanner ID';
-    valueEl.placeholder = 'LTS-VIE-001';
+
+    valueLabel.textContent =
+      'Driver ID';
+
+    valueEl.placeholder =
+      '2022';
+
+    driverNameWrap.style.display =
+      'block';
+
   }
+
+  else if(t === 'C'){
+
+    valueLabel.textContent =
+      'Car plate';
+
+    valueEl.placeholder =
+      'BL-115FT';
+
+    driverNameWrap.style.display =
+      'none';
+
+    driverNameEl.value =
+      '';
+
+  }
+
+  else{
+
+    valueLabel.textContent =
+      'Scanner ID';
+
+    valueEl.placeholder =
+      'LTS-VIE-001';
+
+    driverNameWrap.style.display =
+      'none';
+
+    driverNameEl.value =
+      '';
+
+  }
+
 }
-typeEl.addEventListener('change', updateTypeUI);
+
+
+typeEl.addEventListener(
+  'change',
+  updateTypeUI
+);
+
 
 function normalizeValue(type, value){
-  let v = String(value || '').trim();
-  if(!v) return '';
-  const prefix = type + ':';
-  if(v.toUpperCase().startsWith(prefix)) v = v.substring(2).trim();
-  if(type === 'C' || type === 'S') v = v.toUpperCase();
+
+  let v =
+    String(value || '').trim();
+
+  if(!v){
+    return '';
+  }
+
+  const prefix =
+    type + ':';
+
+  if(
+    v.toUpperCase()
+      .startsWith(prefix)
+  ){
+
+    v =
+      v.substring(2).trim();
+
+  }
+
+  if(
+    type === 'C' ||
+    type === 'S'
+  ){
+
+    v =
+      v.toUpperCase();
+
+  }
+
   return v;
+
 }
+
 
 function safeFilename(value){
-  return value.replace(/[^A-Za-z0-9._-]+/g,'_') + '.png';
+
+  return value
+    .replace(
+      /[^A-Za-z0-9._-]+/g,
+      '_'
+    )
+    + '.png';
+
 }
 
-function waitForQrCanvas(timeoutMs=3000){
-  return new Promise((resolve,reject)=>{
-    const start = Date.now();
-    const tick = ()=>{
-      const c = qrWork.querySelector('canvas');
-      const img = qrWork.querySelector('img');
-      if(c) return resolve(c);
-      if(img && img.complete) return resolve(img);
-      if(Date.now()-start > timeoutMs) return reject(new Error('QR generation timeout'));
-      setTimeout(tick,50);
-    };
-    tick();
-  });
+
+function waitForQrCanvas(
+  timeoutMs = 3000
+){
+
+  return new Promise(
+    (resolve,reject)=>{
+
+      const start =
+        Date.now();
+
+      const tick =
+        ()=>{
+
+          const c =
+            qrWork.querySelector(
+              'canvas'
+            );
+
+          const img =
+            qrWork.querySelector(
+              'img'
+            );
+
+          if(c){
+
+            return resolve(c);
+
+          }
+
+          if(
+            img &&
+            img.complete
+          ){
+
+            return resolve(img);
+
+          }
+
+          if(
+            Date.now() - start >
+            timeoutMs
+          ){
+
+            return reject(
+              new Error(
+                'QR generation timeout'
+              )
+            );
+
+          }
+
+          setTimeout(
+            tick,
+            50
+          );
+
+        };
+
+      tick();
+
+    }
+  );
+
 }
+
+
+function fitText(
+  text,
+  maxWidth,
+  startSize,
+  minSize
+){
+
+  let size =
+    startSize;
+
+  while(
+    size >= minSize
+  ){
+
+    ctx.font =
+      '700 ' +
+      size +
+      'px Arial, Helvetica, sans-serif';
+
+    const width =
+      ctx.measureText(
+        text
+      ).width;
+
+    if(
+      width <= maxWidth
+    ){
+
+      return size;
+
+    }
+
+    size -= 2;
+
+  }
+
+  return minSize;
+
+}
+
 
 async function makeImage(){
-  const type = typeEl.value;
-  const value = normalizeValue(type, valueEl.value);
+
+  const type =
+    typeEl.value;
+
+  const value =
+    normalizeValue(
+      type,
+      valueEl.value
+    );
 
   if(!value){
-    alert('Enter an ID / plate / scanner number.');
+
+    alert(
+      'Enter an ID / plate / scanner number.'
+    );
+
     valueEl.focus();
+
     return;
+
   }
 
-  if(typeof QRCode === 'undefined'){
-    preview.style.display = 'block';
-    statusEl.style.display = 'block';
-    statusEl.textContent = 'QR library did not load. Refresh the page and try again.';
-    downloadBtn.disabled = true;
+
+  if(
+    typeof QRCode ===
+    'undefined'
+  ){
+
+    preview.style.display =
+      'block';
+
+    statusEl.style.display =
+      'block';
+
+    statusEl.textContent =
+      'QR library did not load. Refresh the page and try again.';
+
+    downloadBtn.disabled =
+      true;
+
     return;
+
   }
 
-  valueEl.value = value;
-  currentFilename = safeFilename(value);
 
-  preview.style.display = 'block';
-  statusEl.style.display = 'block';
-  statusEl.textContent = 'Generating image…';
-  downloadBtn.disabled = true;
+  valueEl.value =
+    value;
 
-  qrWork.innerHTML = '';
 
-  new QRCode(qrWork, {
-    text: type + ':' + value,
-    width: 800,
-    height: 800,
-    colorDark: '#000000',
-    colorLight: '#ffffff',
-    correctLevel: QRCode.CorrectLevel.M
-  });
+  currentFilename =
+    safeFilename(
+      value
+    );
+
+
+  preview.style.display =
+    'block';
+
+  statusEl.style.display =
+    'block';
+
+  statusEl.textContent =
+    'Generating image...';
+
+  downloadBtn.disabled =
+    true;
+
+
+  qrWork.innerHTML =
+    '';
+
+
+  /*
+     IMPORTANT:
+
+     The DRIVER NAME is NOT
+     included here.
+
+     Driver QR:
+     D:2022
+
+     Car QR:
+     C:BL-115FT
+
+     Scanner QR:
+     S:LTS-VIE-001
+  */
+
+  new QRCode(
+    qrWork,
+    {
+
+      text:
+        type +
+        ':' +
+        value,
+
+      width:
+        800,
+
+      height:
+        800,
+
+      colorDark:
+        '#000000',
+
+      colorLight:
+        '#ffffff',
+
+      correctLevel:
+        QRCode.CorrectLevel.M
+
+    }
+  );
+
 
   try{
-    const qrSource = await waitForQrCanvas();
 
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0,0,1200,1400);
+    const qrSource =
+      await waitForQrCanvas();
 
-    ctx.imageSmoothingEnabled = false;
-    ctx.drawImage(qrSource, 100, 80, 1000, 1000);
 
-    let fontSize = type === 'S' ? 72 : 82;
-    ctx.fillStyle = '#000000';
-    ctx.font = '700 ' + fontSize + 'px Arial, Helvetica, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'top';
-    ctx.fillText(value, 600, 1120);
+    /*
+      White PNG canvas
+      1200 x 1400
+    */
 
-    statusEl.textContent = 'Ready: ' + currentFilename;
-    downloadBtn.disabled = false;
-  }catch(err){
-    console.error(err);
-    statusEl.textContent = 'Could not generate the QR. Refresh the page and try again.';
-    downloadBtn.disabled = true;
+    ctx.fillStyle =
+      '#ffffff';
+
+    ctx.fillRect(
+      0,
+      0,
+      1200,
+      1400
+    );
+
+
+    /*
+      QR
+    */
+
+    ctx.imageSmoothingEnabled =
+      false;
+
+    ctx.drawImage(
+      qrSource,
+      100,
+      70,
+      1000,
+      1000
+    );
+
+
+    ctx.fillStyle =
+      '#000000';
+
+    ctx.textAlign =
+      'center';
+
+    ctx.textBaseline =
+      'top';
+
+
+    /*
+      DRIVER
+    */
+
+    if(
+      type === 'D'
+    ){
+
+      const driverName =
+        String(
+          driverNameEl.value ||
+          ''
+        ).trim();
+
+
+      if(driverName){
+
+        /*
+          Driver name
+        */
+
+        const nameSize =
+          fitText(
+            driverName,
+            1050,
+            70,
+            44
+          );
+
+        ctx.font =
+          '700 ' +
+          nameSize +
+          'px Arial, Helvetica, sans-serif';
+
+        ctx.fillText(
+          driverName,
+          600,
+          1090
+        );
+
+
+        /*
+          Driver ID
+        */
+
+        ctx.font =
+          '700 62px Arial, Helvetica, sans-serif';
+
+        ctx.fillText(
+          value,
+          600,
+          1185
+        );
+
+      }
+
+      else{
+
+        /*
+          No name entered:
+          show ID only
+        */
+
+        ctx.font =
+          '700 82px Arial, Helvetica, sans-serif';
+
+        ctx.fillText(
+          value,
+          600,
+          1120
+        );
+
+      }
+
+    }
+
+
+    /*
+      CAR
+    */
+
+    else if(
+      type === 'C'
+    ){
+
+      const carSize =
+        fitText(
+          value,
+          1050,
+          82,
+          55
+        );
+
+      ctx.font =
+        '700 ' +
+        carSize +
+        'px Arial, Helvetica, sans-serif';
+
+      ctx.fillText(
+        value,
+        600,
+        1120
+      );
+
+    }
+
+
+    /*
+      SCANNER
+    */
+
+    else{
+
+      const scannerSize =
+        fitText(
+          value,
+          1050,
+          72,
+          48
+        );
+
+      ctx.font =
+        '700 ' +
+        scannerSize +
+        'px Arial, Helvetica, sans-serif';
+
+      ctx.fillText(
+        value,
+        600,
+        1120
+      );
+
+    }
+
+
+    statusEl.textContent =
+      'Ready: ' +
+      currentFilename;
+
+
+    downloadBtn.disabled =
+      false;
+
   }
+
+  catch(err){
+
+    console.error(
+      err
+    );
+
+    statusEl.textContent =
+      'Could not generate the QR. Refresh the page and try again.';
+
+    downloadBtn.disabled =
+      true;
+
+  }
+
 }
 
-generateBtn.addEventListener('click', makeImage);
-valueEl.addEventListener('keydown', e => {
-  if(e.key === 'Enter') makeImage();
-});
 
-downloadBtn.addEventListener('click', () => {
-  if(!currentFilename) return;
+generateBtn.addEventListener(
+  'click',
+  makeImage
+);
 
-  canvas.toBlob(blob => {
-    if(!blob) return;
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = currentFilename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    statusEl.textContent = 'Downloaded: ' + currentFilename;
-  }, 'image/png');
-});
+
+valueEl.addEventListener(
+  'keydown',
+  e => {
+
+    if(
+      e.key === 'Enter'
+    ){
+
+      makeImage();
+
+    }
+
+  }
+);
+
+
+driverNameEl.addEventListener(
+  'keydown',
+  e => {
+
+    if(
+      e.key === 'Enter'
+    ){
+
+      makeImage();
+
+    }
+
+  }
+);
+
+
+downloadBtn.addEventListener(
+  'click',
+  ()=>{
+
+    if(
+      !currentFilename
+    ){
+
+      return;
+
+    }
+
+
+    canvas.toBlob(
+      blob => {
+
+        if(
+          !blob
+        ){
+
+          return;
+
+        }
+
+
+        const url =
+          URL.createObjectURL(
+            blob
+          );
+
+
+        const a =
+          document.createElement(
+            'a'
+          );
+
+
+        a.href =
+          url;
+
+        a.download =
+          currentFilename;
+
+
+        document.body.appendChild(
+          a
+        );
+
+
+        a.click();
+
+
+        a.remove();
+
+
+        setTimeout(
+          ()=>{
+
+            URL.revokeObjectURL(
+              url
+            );
+
+          },
+          1000
+        );
+
+
+        statusEl.textContent =
+          'Downloaded: ' +
+          currentFilename;
+
+      },
+      'image/png'
+    );
+
+  }
+);
+
 
 updateTypeUI();
+
 </script>
+
 </body>
 </html>
